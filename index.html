@@ -5,7 +5,6 @@
     <title>SpaceOS VR – microbricks</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- A‑Frame -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
     <style>
@@ -16,81 +15,45 @@
   <body>
     <a-scene vr-mode-ui="enabled: true">
 
-      <!-- Camera + Cardboard cursor -->
+      <!-- Camera -->
       <a-entity id="cameraRig" camera look-controls>
         <a-cursor></a-cursor>
       </a-entity>
-
-      <!-- Drie hoofdpanelen -->
-      <a-plane position="-1 1.5 -3" width="1" height="0.6" color="#222" opacity="0.9">
-        <a-text value="Notities" align="center" position="0 0 0.01"></a-text>
-      </a-plane>
-
-      <a-plane position="0 1.5 -3" width="1" height="0.6" color="#222" opacity="0.9">
-        <a-text value="Browser" align="center" position="0 0 0.01"></a-text>
-      </a-plane>
-
-      <a-plane position="1 1.5 -3" width="1" height="0.6" color="#222" opacity="0.9">
-        <a-text value="Spotify" align="center" position="0 0 0.01"></a-text>
-      </a-plane>
 
       <!-- Dock -->
       <a-entity id="dock" position="0 0.5 -3">
         <a-circle id="openNotes"   radius="0.15" color="#4A90E2" position="-0.6 0 0"></a-circle>
         <a-circle id="openBrowser" radius="0.15" color="#7ED321" position="-0.3 0 0"></a-circle>
         <a-circle id="openSpotify" radius="0.15" color="#F8E71C" position="0 0 0"></a-circle>
-        <a-circle radius="0.15" color="#D8D8D8" position="0.3 0 0"></a-circle>
-        <a-circle radius="0.15" color="#9B9B9B" position="0.6 0 0"></a-circle>
       </a-entity>
 
-      <!-- Notities app -->
-      <a-plane id="notesApp" visible="false"
-               position="0 1.5 -3" width="2" height="1.2" color="#222">
-        <a-text value="Notities" position="-0.9 0.5 0.01"></a-text>
-        <a-text id="notesText" value="Nog geen notities"
-                wrap-count="40" position="-0.9 0.2 0.01"></a-text>
-        <a-plane id="notesClose" position="0.9 0.5 0.01"
-                 width="0.2" height="0.2" color="red">
-          <a-text value="X" align="center" position="0 0 0.01"></a-text>
-        </a-plane>
-      </a-plane>
-
-      <!-- VR-mini-browser app -->
+      <!-- Browser -->
       <a-plane id="browserApp" visible="false"
-               position="0 1.5 -3" width="2.2" height="1.4" color="#333">
+               position="0 1.5 -3" width="2.4" height="2" color="#333">
 
-        <a-text value="VR Browser" position="-0.9 0.6 0.01"></a-text>
+        <a-text value="VR Browser" position="-1.1 0.9 0.01"></a-text>
 
         <!-- Adresbalk -->
-        <a-plane id="addressBar" width="1.8" height="0.2" color="#555" position="0 0.35 0.01">
+        <a-plane id="addressBar" width="2" height="0.25" color="#555" position="0 0.6 0.01">
           <a-text id="addressText" value="https://example.com"
-                  position="-0.85 0 0.01" wrap-count="40"></a-text>
+                  position="-0.95 0 0.01" wrap-count="60"></a-text>
         </a-plane>
 
-        <!-- Content container -->
-        <a-entity id="browserContent" position="0 -0.2 0.01"></a-entity>
+        <!-- Browser content -->
+        <a-entity id="browserContent" position="0 -0.1 0.01"></a-entity>
 
         <!-- Sluitknop -->
-        <a-plane id="browserClose" position="0.95 0.6 0.01"
+        <a-plane id="browserClose" position="1.1 0.9 0.01"
                  width="0.2" height="0.2" color="red">
           <a-text value="X" align="center" position="0 0 0.01"></a-text>
         </a-plane>
-      </a-plane>
 
-      <!-- Spotify app -->
-      <a-plane id="spotifyApp" visible="false"
-               position="0 1.5 -3" width="2" height="1.2" color="#1DB954">
-        <a-text value="Spotify Controller" position="-0.9 0.5 0.01"></a-text>
-        <a-text id="spotifyStatus" value="Niet verbonden met Spotify API"
-                wrap-count="40" position="-0.9 0.2 0.01"></a-text>
-        <a-plane id="spotifyClose" position="0.9 0.5 0.01"
-                 width="0.2" height="0.2" color="#0b3a1c">
-          <a-text value="X" align="center" position="0 0 0.01"></a-text>
-        </a-plane>
+        <!-- VR toetsenbord -->
+        <a-entity id="keyboard" position="0 -0.7 0.02"></a-entity>
+
       </a-plane>
 
       <a-sky color="#111"></a-sky>
-
     </a-scene>
 
     <script src="script.js"></script>
