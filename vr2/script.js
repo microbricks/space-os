@@ -215,8 +215,33 @@ function gamepadLoop() {
 
     if (pad) {
       // Meestal: axes[0] = X, axes[1] = Y van linker stick
-      const ax = pad.axes[0] || 0;
-      const ay = pad.axes[1] || 0;
+      let ax = 0;
+let ay = 0;
+
+// 1. Probeer echte stick (axes)
+if (pad.axes && pad.axes.length >= 2) {
+  ax = pad.axes[0];
+  ay = pad.axes[1];
+}
+
+// 2. Als stick NIET werkt → gebruik D-pad knoppen
+// Joy-Con D-pad knoppen (meestal):
+// button 12 = up
+// button 13 = down
+// button 14 = left
+// button 15 = right
+
+if (pad.buttons[12]?.pressed) ay = -1;
+if (pad.buttons[13]?.pressed) ay = +1;
+if (pad.buttons[14]?.pressed) ax = -1;
+if (pad.buttons[15]?.pressed) ax = +1;
+
+// Normaliseer naar 0..1
+const nx = (ax + 1) / 2;
+const ny = (ay + 1) / 2;
+
+updateJoyConCursor(nx, ny);
+
 
       // ax/ay zijn tussen -1 en 1
       const nx = (ax + 1) / 2;      // 0..1
