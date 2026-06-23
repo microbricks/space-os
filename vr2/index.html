@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SpaceOS VR</title>
+  <title>SpaceOS VR (Joy-Con)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <style>
@@ -18,7 +18,7 @@
     <a-cursor></a-cursor>
   </a-entity>
 
-  <!-- Hand cursor -->
+  <!-- Hand cursor (Joy-Con pointer) -->
   <a-sphere id="handCursor"
             radius="0.03"
             color="#FFD700"
@@ -27,7 +27,8 @@
 
   <!-- Dock -->
   <a-entity id="dock" position="0 0.5 -3">
-    <a-circle id="openBrowser" radius="0.15" color="#7ED321"></a-circle>
+    <a-circle id="openBrowser" radius="0.15" color="#7ED321" position="-0.4 0 0"></a-circle>
+    <a-circle id="connectJoyCon" radius="0.15" color="#4A90E2" position="0.4 0 0"></a-circle>
   </a-entity>
 
   <!-- Browser -->
@@ -49,7 +50,7 @@
       <a-text value="X" align="center" position="0 0 0.01"></a-text>
     </a-plane>
 
-    <a-entity id="keyboard" position="-2 -0.9 0.02"></a-entity>
+    <a-entity id="keyboard" position="0 -0.9 0.02"></a-entity>
   </a-plane>
 
   <a-sky color="#111"></a-sky>
