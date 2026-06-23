@@ -12,86 +12,148 @@ const browserClose = document.querySelector('#browserClose');
 const spotifyClose = document.querySelector('#spotifyClose');
 
 const notesText    = document.querySelector('#notesText');
+const browserContent = document.querySelector('#browserContent');
+const addressText = document.querySelector('#addressText');
 
 // Notities openen
 openNotes.addEventListener('click', () => {
   notesApp.setAttribute('visible', true);
 });
 
-// VR-mini-browser openen
+// Browser openen
 openBrowser.addEventListener('click', () => {
   browserApp.setAttribute('visible', true);
-  loadPage('https://example.com');
+  loadPage("https://example.com");
 });
 
-// Spotify openen (placeholder)
+// Spotify openen
 openSpotify.addEventListener('click', () => {
   spotifyApp.setAttribute('visible', true);
 });
 
 // Sluiten
-notesClose.addEventListener('click', () => {
-  notesApp.setAttribute('visible', false);
-});
+notesClose.addEventListener('click', () => notesApp.setAttribute('visible', false));
+browserClose.addEventListener('click', () => browserApp.setAttribute('visible', false));
+spotifyClose.addEventListener('click', () => spotifyApp.setAttribute('visible', false));
 
-browserClose.addEventListener('click', () => {
-  browserApp.setAttribute('visible', false);
-});
-
-spotifyClose.addEventListener('click', () => {
-  spotifyApp.setAttribute('visible', false);
-});
-
-// Notities‑app: tekst invoeren + opslaan
+// Notities opslaan
 notesApp.addEventListener('click', () => {
   const text = prompt('Typ je notitie:');
   if (text) {
     notesText.setAttribute('value', text);
-    try {
-      localStorage.setItem('vrNotes', text);
-    } catch (e) {
-      console.warn('Kon notities niet opslaan:', e);
-    }
+    localStorage.setItem('vrNotes', text);
   }
 });
 
-// Notities laden bij start
-try {
-  const saved = localStorage.getItem('vrNotes');
-  if (saved) {
-    notesText.setAttribute('value', saved);
-  }
-} catch (e) {
-  console.warn('Kon opgeslagen notities niet laden:', e);
-}
+// Notities laden
+const saved = localStorage.getItem('vrNotes');
+if (saved) notesText.setAttribute('value', saved);
 
-// Mini-browser engine
+
+// -----------------------------
+// MINI-BROWSER ENGINE
+// -----------------------------
+
+let scrollOffset = 0;
+
+// Pagina laden
 async function loadPage(url) {
-  const content = document.querySelector('#browserContent');
-  const addressText = document.querySelector('#addressText');
-
   addressText.setAttribute('value', url);
-  content.innerHTML = '';
+  browserContent.innerHTML = "";
+  scrollOffset = 0;
 
   try {
     const response = await fetch(url);
     const html = await response.text();
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const doc = parser.parseFromString(html, "text/html");
 
-    const text = doc.body.innerText.substring(0, 2000);
+    // Tekst + links extraheren
+    const elements = extractContent(doc);
 
-    const textEntity = document.createElement('a-text');
-    textEntity.setAttribute('value', text);
-    textEntity.setAttribute('wrap-count', 50);
-    textEntity.setAttribute('position', '-0.9 0 0');
-    content.appendChild(textEntity);
+    // Renderen in VR
+    renderContent(elements);
+
   } catch (e) {
-    const errorText = document.createElement('a-text');
-    errorText.setAttribute('value', 'Kan pagina niet laden.');
-    errorText.setAttribute('color', 'red');
-    errorText.setAttribute('position', '-0.9 0 0');
-    content.appendChild(errorText);
+    showError("Kan pagina niet laden.");
   }
 }
+
+// HTML parser → tekst + links
+function extractContent(doc) {
+  const items = [];
+  const walker = doc.body;
+
+  walker.querySelectorAll("*").forEach(el => {
+    if (el.tagName === "A" && el.href) {
+      items.push({ type: "link", text: el.innerText || el.href, href: el.href });
+    } else if (el.innerText && el.innerText.trim().length > 0) {
+      items.push({ type: "text", text: el.innerText });
+    }
+  });
+
+  return items.slice(0, 80); // performance limit
+}
+
+// VR-renderer
+function renderContent(items) {
+  let y = 0;
+
+  items.forEach(item => {
+    if (item.type === "text") {
+      const t = document.createElement("a-text");
+      t.setAttribute("value", item.text);
+      t.setAttribute("wrap-count", 50);
+      t.setAttribute("position", `-0.9 ${y} 0`);
+      browserContent.appendChild(t);
+      y -= 0.15;
+    }
+
+    if (item.type === "link") {
+      const btn = document.createElement("a-plane");
+      btn.setAttribute("width", "1.8");
+      btn.setAttribute("height", "0.15");
+      btn.setAttribute("color", "#2a6df4");
+      btn.setAttribute("position", `0 ${y} 0`);
+      btn.setAttribute("class", "clickable");
+
+      const txt = document.createElement("a-text");
+      txt.setAttribute("value", item.text);
+      txt.setAttribute("position", "-0.85 0 0.01");
+      txt.setAttribute("wrap-count", 40);
+
+      btn.appendChild(txt);
+      browserContent.appendChild(btn);
+
+      btn.addEventListener("click", () => loadPage(item.href));
+
+      y -= 0.2;
+    }
+  });
+}
+
+// Foutmelding
+function showError(msg) {
+  const t = document.createElement("a-text");
+  t.setAttribute("value", msg);
+  t.setAttribute("color", "red");
+  t.setAttribute("position", "-0.9 0 0");
+  browserContent.appendChild(t);
+}
+
+
+// -----------------------------
+// SCROLL SYSTEM
+// -----------------------------
+
+document.querySelector('#cameraRig').addEventListener("componentchanged", e => {
+  if (e.detail.name !== "rotation") return;
+
+  const pitch = e.detail.newData.x;
+
+  if (pitch < -10) scrollOffset += 0.02;   // kijk omhoog → scroll omhoog
+  if (pitch > 10) scrollOffset -= 0.02;    // kijk omlaag → scroll omlaag
+
+  browserContent.setAttribute("position", `0 ${scrollOffset} 0.01`);
+});
