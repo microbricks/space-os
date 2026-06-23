@@ -1,3 +1,6 @@
+// -----------------------------
+// ELEMENTEN
+// -----------------------------
 const browserApp     = document.querySelector('#browserApp');
 const openBrowser    = document.querySelector('#openBrowser');
 const browserClose   = document.querySelector('#browserClose');
@@ -5,17 +8,26 @@ const browserContent = document.querySelector('#browserContent');
 const addressText    = document.querySelector('#addressText');
 const keyboard       = document.querySelector('#keyboard');
 const cameraRig      = document.querySelector('#cameraRig');
+const handCursor     = document.querySelector('#handCursor');
 
 let scrollOffset = 0;
 
-// Browser openen
+// -----------------------------
+// BROWSER OPENEN
+// -----------------------------
 openBrowser.addEventListener('click', () => {
   browserApp.setAttribute('visible', true);
   loadPage('https://example.com');
   buildKeyboard();
+
+  if (!pcHand) {
+    setTimeout(createHandReceiver, 500);
+  }
 });
 
-// Browser sluiten
+// -----------------------------
+// BROWSER SLUITEN
+// -----------------------------
 browserClose.addEventListener('click', () => {
   browserApp.setAttribute('visible', false);
 });
@@ -23,7 +35,6 @@ browserClose.addEventListener('click', () => {
 // -----------------------------
 // MINI-BROWSER ENGINE
 // -----------------------------
-
 async function loadPage(url) {
   addressText.setAttribute('value', url);
   browserContent.innerHTML = '';
@@ -43,7 +54,6 @@ async function loadPage(url) {
   }
 }
 
-// Tekst + links + afbeeldingen uit HTML halen
 function extractContent(doc) {
   const items = [];
 
@@ -60,7 +70,6 @@ function extractContent(doc) {
   return items.slice(0, 120);
 }
 
-// In VR renderen
 function renderContent(items) {
   let y = 0;
 
@@ -118,14 +127,13 @@ function showError(msg) {
 // -----------------------------
 // SCROLL MET KIJKRICHTING
 // -----------------------------
-
 cameraRig.addEventListener('componentchanged', e => {
   if (e.detail.name !== 'rotation') return;
 
   const pitch = e.detail.newData.x;
 
-  if (pitch < -10) scrollOffset += 0.02;  // omhoog kijken → omhoog scrollen
-  if (pitch > 10) scrollOffset -= 0.02;  // omlaag kijken → omlaag scrollen
+  if (pitch < -10) scrollOffset += 0.02;
+  if (pitch > 10) scrollOffset -= 0.02;
 
   browserContent.setAttribute('position', `0 ${scrollOffset} 0.01`);
 });
@@ -133,7 +141,6 @@ cameraRig.addEventListener('componentchanged', e => {
 // -----------------------------
 // VR-TOETSENBORD
 // -----------------------------
-
 function buildKeyboard() {
   keyboard.innerHTML = '';
 
@@ -150,8 +157,8 @@ function buildKeyboard() {
     }
   });
 
-  addKey('BACK', -0.5, -1.2);
-  addKey('ENTER', 0.5, -1.2);
+  addKey('BACK', -0.5, -0.2);
+  addKey('ENTER', 0.5, -0.2);
 }
 
 function addKey(label, x, y) {
@@ -186,4 +193,45 @@ function pressKey(label) {
   }
 
   addressText.setAttribute('value', current);
+}
+
+// -----------------------------
+// HAND-TRACKING ONTVANGER (WebRTC)
+// -----------------------------
+let pcHand, handChannel;
+
+function updateHandPos(nx, ny) {
+  const x = (nx - 0.5) * 2.0;
+  const y = 1.6 - ny * 0.8;
+  handCursor.setAttribute('position', `${x} ${y} -2.5`);
+}
+
+async function createHandReceiver() {
+  pcHand = new RTCPeerConnection();
+
+  pcHand.ondatachannel = ev => {
+    handChannel = ev.channel;
+    handChannel.onopen = () => console.log('Hand channel open');
+    handChannel.onmessage = e => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'move') updateHandPos(msg.x, msg.y);
+      if (msg.type === 'click') console.log('Hand click');
+    };
+  };
+
+  pcHand.onicecandidate = e => {
+    if (!e.candidate) {
+      const answerText = btoa(JSON.stringify(pcHand.localDescription));
+      console.log('ANSWER (kopieer naar iPad):', answerText);
+      alert('Answer staat in console. Kopieer die naar je iPad.');
+    }
+  };
+
+  const offerStr = prompt('Plak hier de OFFER van je iPad:');
+  if (!offerStr) return;
+
+  const offerDesc = JSON.parse(atob(offerStr.trim()));
+  await pcHand.setRemoteDescription(offerDesc);
+  const answer = await pcHand.createAnswer();
+  await pcHand.setLocalDescription(answer);
 }
