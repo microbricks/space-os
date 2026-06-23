@@ -15,6 +15,8 @@ const notesText    = document.querySelector('#notesText');
 const browserContent = document.querySelector('#browserContent');
 const addressText = document.querySelector('#addressText');
 
+let scrollOffset = 0;
+
 // Notities openen
 openNotes.addEventListener('click', () => {
   notesApp.setAttribute('visible', true);
@@ -54,9 +56,6 @@ if (saved) notesText.setAttribute('value', saved);
 // MINI-BROWSER ENGINE
 // -----------------------------
 
-let scrollOffset = 0;
-
-// Pagina laden
 async function loadPage(url) {
   addressText.setAttribute('value', url);
   browserContent.innerHTML = "";
@@ -69,31 +68,37 @@ async function loadPage(url) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
 
-    // Tekst + links extraheren
-    const elements = extractContent(doc);
-
-    // Renderen in VR
-    renderContent(elements);
+    const items = extractContent(doc);
+    renderContent(items);
 
   } catch (e) {
     showError("Kan pagina niet laden.");
   }
 }
 
-// HTML parser → tekst + links
+// HTML parser → tekst + links + afbeeldingen
 function extractContent(doc) {
   const items = [];
-  const walker = doc.body;
 
-  walker.querySelectorAll("*").forEach(el => {
-    if (el.tagName === "A" && el.href) {
+  doc.body.querySelectorAll("*").forEach(el => {
+
+    // Afbeeldingen
+    if (el.tagName === "IMG" && el.src) {
+      items.push({ type: "image", src: el.src });
+    }
+
+    // Links
+    else if (el.tagName === "A" && el.href) {
       items.push({ type: "link", text: el.innerText || el.href, href: el.href });
-    } else if (el.innerText && el.innerText.trim().length > 0) {
+    }
+
+    // Tekst
+    else if (el.innerText && el.innerText.trim().length > 0) {
       items.push({ type: "text", text: el.innerText });
     }
   });
 
-  return items.slice(0, 80); // performance limit
+  return items.slice(0, 120); // performance limit
 }
 
 // VR-renderer
@@ -101,6 +106,8 @@ function renderContent(items) {
   let y = 0;
 
   items.forEach(item => {
+
+    // Tekst
     if (item.type === "text") {
       const t = document.createElement("a-text");
       t.setAttribute("value", item.text);
@@ -110,6 +117,7 @@ function renderContent(items) {
       y -= 0.15;
     }
 
+    // Klikbare link
     if (item.type === "link") {
       const btn = document.createElement("a-plane");
       btn.setAttribute("width", "1.8");
@@ -129,6 +137,18 @@ function renderContent(items) {
       btn.addEventListener("click", () => loadPage(item.href));
 
       y -= 0.2;
+    }
+
+    // Afbeelding
+    if (item.type === "image") {
+      const img = document.createElement("a-image");
+      img.setAttribute("src", item.src);
+      img.setAttribute("width", "1.8");
+      img.setAttribute("height", "1");
+      img.setAttribute("position", `0 ${y} 0`);
+      browserContent.appendChild(img);
+
+      y -= 1.2;
     }
   });
 }
@@ -152,8 +172,8 @@ document.querySelector('#cameraRig').addEventListener("componentchanged", e => {
 
   const pitch = e.detail.newData.x;
 
-  if (pitch < -10) scrollOffset += 0.02;   // kijk omhoog → scroll omhoog
-  if (pitch > 10) scrollOffset -= 0.02;    // kijk omlaag → scroll omlaag
+  if (pitch < -10) scrollOffset += 0.02;   // omhoog kijken → scroll omhoog
+  if (pitch > 10) scrollOffset -= 0.02;    // omlaag kijken → scroll omlaag
 
   browserContent.setAttribute("position", `0 ${scrollOffset} 0.01`);
 });
