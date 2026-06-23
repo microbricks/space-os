@@ -12,17 +12,16 @@ const browserClose = document.querySelector('#browserClose');
 const spotifyClose = document.querySelector('#spotifyClose');
 
 const notesText    = document.querySelector('#notesText');
-const webview      = document.querySelector('#webview');
 
 // Notities openen
 openNotes.addEventListener('click', () => {
   notesApp.setAttribute('visible', true);
 });
 
-// VR-browser openen
+// VR-mini-browser openen
 openBrowser.addEventListener('click', () => {
   browserApp.setAttribute('visible', true);
-  webview.src = 'https://google.com'; // hier kun je later andere sites zetten
+  loadPage('https://example.com');
 });
 
 // Spotify openen (placeholder)
@@ -64,4 +63,35 @@ try {
   }
 } catch (e) {
   console.warn('Kon opgeslagen notities niet laden:', e);
+}
+
+// Mini-browser engine
+async function loadPage(url) {
+  const content = document.querySelector('#browserContent');
+  const addressText = document.querySelector('#addressText');
+
+  addressText.setAttribute('value', url);
+  content.innerHTML = '';
+
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const text = doc.body.innerText.substring(0, 2000);
+
+    const textEntity = document.createElement('a-text');
+    textEntity.setAttribute('value', text);
+    textEntity.setAttribute('wrap-count', 50);
+    textEntity.setAttribute('position', '-0.9 0 0');
+    content.appendChild(textEntity);
+  } catch (e) {
+    const errorText = document.createElement('a-text');
+    errorText.setAttribute('value', 'Kan pagina niet laden.');
+    errorText.setAttribute('color', 'red');
+    errorText.setAttribute('position', '-0.9 0 0');
+    content.appendChild(errorText);
+  }
 }
