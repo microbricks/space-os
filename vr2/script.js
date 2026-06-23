@@ -14,7 +14,7 @@ const connectJoyCon  = document.querySelector('#connectJoyCon');
 let scrollOffset = 0;
 
 // -----------------------------
-// BROWSER OPENEN
+// BROWSER OPENEN / SLUITEN
 // -----------------------------
 openBrowser.addEventListener('click', () => {
   browserApp.setAttribute('visible', true);
@@ -22,9 +22,6 @@ openBrowser.addEventListener('click', () => {
   buildKeyboard();
 });
 
-// -----------------------------
-// BROWSER SLUITEN
-// -----------------------------
 browserClose.addEventListener('click', () => {
   browserApp.setAttribute('visible', false);
 });
@@ -197,7 +194,7 @@ function pressKey(label) {
 // -----------------------------
 let joycon = null;
 
-async function connectJoyCon() {
+async function connectJoyConHandler() {
   if (!('hid' in navigator)) {
     alert('WebHID wordt niet ondersteund in deze browser.');
     return;
@@ -220,7 +217,7 @@ async function connectJoyCon() {
   joycon.addEventListener('inputreport', e => {
     const data = new Uint8Array(e.data.buffer);
 
-    // Stick data (ruwe waarden, simpel voorbeeld)
+    // Stick data (ruw, simpel voorbeeld)
     const stickX = data[6];
     const stickY = data[7];
 
@@ -244,9 +241,38 @@ function updateJoyConCursor(nx, ny) {
   handCursor.setAttribute('position', `${x} ${y} -2.5`);
 }
 
-// Simpele click: later kun je hier raycast / echte UI-clicks doen
+// -----------------------------
+// JOY-CON CLICK → RAYCAST CLICK
+// -----------------------------
 function joyConClick() {
-  console.log('Joy-Con click');
+  // Raycast vanaf handCursor richting -Z
+  const sceneEl = document.querySelector('a-scene');
+  const cursorPos = handCursor.object3D.position.clone();
+  const dir = new THREE.Vector3(0, 0, -1);
+  handCursor.object3D.getWorldDirection(dir);
+
+  const raycaster = new THREE.Raycaster(cursorPos, dir.normalize());
+  const clickableEls = Array.from(document.querySelectorAll('.clickable'))
+    .map(el => el.object3D);
+
+  const intersects = raycaster.intersectObjects(clickableEls, true);
+
+  if (intersects.length > 0) {
+    const hitObj = intersects[0].object;
+    let targetEl = hitObj.el;
+
+    // omhoog klimmen tot we een A-Frame element hebben
+    while (targetEl && !targetEl.tagName) {
+      targetEl = targetEl.parentEl;
+    }
+
+    if (targetEl) {
+      targetEl.emit('click');
+    }
+  }
 }
 
-connectJoyCon.addEventListener('click', connectJoyCon);
+// -----------------------------
+// EVENT-LISTENERS
+// -----------------------------
+connectJoyCon.addEventListener('click', connectJoyConHandler);
