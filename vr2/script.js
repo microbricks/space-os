@@ -9,6 +9,7 @@ const addressText    = document.querySelector('#addressText');
 const keyboard       = document.querySelector('#keyboard');
 const cameraRig      = document.querySelector('#cameraRig');
 const handCursor     = document.querySelector('#handCursor');
+const connectJoyCon  = document.querySelector('#connectJoyCon');
 
 let scrollOffset = 0;
 
@@ -19,10 +20,6 @@ openBrowser.addEventListener('click', () => {
   browserApp.setAttribute('visible', true);
   loadPage('https://example.com');
   buildKeyboard();
-
-  if (!pcHand) {
-    setTimeout(createHandReceiver, 500);
-  }
 });
 
 // -----------------------------
@@ -157,8 +154,8 @@ function buildKeyboard() {
     }
   });
 
-  addKey('BACK', -0.5, -2);
-  addKey('ENTER', 0.5, -2);
+  addKey('BACK', -0.5, -0.2);
+  addKey('ENTER', 0.5, -0.2);
 }
 
 function addKey(label, x, y) {
@@ -196,42 +193,60 @@ function pressKey(label) {
 }
 
 // -----------------------------
-// HAND-TRACKING ONTVANGER (WebRTC)
+// JOY-CON SUPPORT (WebHID)
 // -----------------------------
-let pcHand, handChannel;
+let joycon = null;
 
-function updateHandPos(nx, ny) {
+async function connectJoyCon() {
+  if (!('hid' in navigator)) {
+    alert('WebHID wordt niet ondersteund in deze browser.');
+    return;
+  }
+
+  const devices = await navigator.hid.requestDevice({
+    filters: [{ vendorId: 0x057e }] // Nintendo
+  });
+
+  if (devices.length === 0) {
+    alert('Geen Joy-Con gevonden');
+    return;
+  }
+
+  joycon = devices[0];
+  await joycon.open();
+
+  console.log('Joy-Con verbonden:', joycon.productName);
+
+  joycon.addEventListener('inputreport', e => {
+    const data = new Uint8Array(e.data.buffer);
+
+    // Stick data (ruwe waarden, simpel voorbeeld)
+    const stickX = data[6];
+    const stickY = data[7];
+
+    const nx = stickX / 255;
+    const ny = stickY / 255;
+
+    updateJoyConCursor(nx, ny);
+
+    const buttons = data[3];
+    const buttonA = buttons & 0x08;
+
+    if (buttonA) {
+      joyConClick();
+    }
+  });
+}
+
+function updateJoyConCursor(nx, ny) {
   const x = (nx - 0.5) * 2.0;
   const y = 1.6 - ny * 0.8;
   handCursor.setAttribute('position', `${x} ${y} -2.5`);
 }
 
-async function createHandReceiver() {
-  pcHand = new RTCPeerConnection();
-
-  pcHand.ondatachannel = ev => {
-    handChannel = ev.channel;
-    handChannel.onopen = () => console.log('Hand channel open');
-    handChannel.onmessage = e => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'move') updateHandPos(msg.x, msg.y);
-      if (msg.type === 'click') console.log('Hand click');
-    };
-  };
-
-  pcHand.onicecandidate = e => {
-    if (!e.candidate) {
-      const answerText = btoa(JSON.stringify(pcHand.localDescription));
-      console.log('ANSWER (kopieer naar iPad):', answerText);
-      alert('Answer staat in console. Kopieer die naar je iPad.');
-    }
-  };
-
-  const offerStr = prompt('Plak hier de OFFER van je iPad:');
-  if (!offerStr) return;
-
-  const offerDesc = JSON.parse(atob(offerStr.trim()));
-  await pcHand.setRemoteDescription(offerDesc);
-  const answer = await pcHand.createAnswer();
-  await pcHand.setLocalDescription(answer);
+// Simpele click: later kun je hier raycast / echte UI-clicks doen
+function joyConClick() {
+  console.log('Joy-Con click');
 }
+
+connectJoyCon.addEventListener('click', connectJoyCon);
