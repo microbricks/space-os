@@ -12,6 +12,7 @@
       body { margin: 0; }
     </style>
   </head>
+
   <body>
     <a-scene vr-mode-ui="enabled: true">
 
@@ -57,6 +58,8 @@
       <!-- VR-mini-browser app -->
       <a-plane id="browserApp" visible="false"
                position="0 1.5 -3" width="2.2" height="1.4" color="#333">
+
+        <!-- Titel -->
         <a-text value="VR Browser" position="-0.9 0.6 0.01"></a-text>
 
         <!-- Adresbalk -->
@@ -65,7 +68,7 @@
                   position="-0.85 0 0.01" wrap-count="40"></a-text>
         </a-plane>
 
-        <!-- Content container -->
+        <!-- Content container (scroll + links) -->
         <a-entity id="browserContent" position="0 -0.2 0.01"></a-entity>
 
         <!-- Sluitknop -->
@@ -87,9 +90,12 @@
         </a-plane>
       </a-plane>
 
+      <!-- Achtergrond -->
       <a-sky color="#111"></a-sky>
+
     </a-scene>
 
+    <!-- Externe JS -->
     <script src="script.js"></script>
   </body>
 </html>
