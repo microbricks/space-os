@@ -190,50 +190,54 @@ function pressKey(label) {
 }
 
 // -----------------------------
-// JOY-CON SUPPORT (WebHID)
+// JOY-CONS VIA GAMEPAD API
 // -----------------------------
-let joycon = null;
+let useGamepad = false;
+let lastAPressed = false;
 
-async function connectJoyConHandler() {
-  if (!('hid' in navigator)) {
-    alert('WebHID wordt niet ondersteund in deze browser.');
+function connectJoyConHandler() {
+  if (!('getGamepads' in navigator)) {
+    alert('Gamepad API wordt niet ondersteund in deze browser.');
     return;
   }
 
-  const devices = await navigator.hid.requestDevice({
-    filters: [{ vendorId: 0x057e }] // Nintendo
-  });
-
-  if (devices.length === 0) {
-    alert('Geen Joy-Con gevonden');
-    return;
-  }
-
-  joycon = devices[0];
-  await joycon.open();
-
-  console.log('Joy-Con verbonden:', joycon.productName);
-
-  joycon.addEventListener('inputreport', e => {
-    const data = new Uint8Array(e.data.buffer);
-
-    // Stick data (ruw, simpel voorbeeld)
-    const stickX = data[6];
-    const stickY = data[7];
-
-    const nx = stickX / 255;
-    const ny = stickY / 255;
-
-    updateJoyConCursor(nx, ny);
-
-    const buttons = data[3];
-    const buttonA = buttons & 0x08;
-
-    if (buttonA) {
-      joyConClick();
-    }
-  });
+  useGamepad = true;
+  alert('Koppel nu je Joy-Con via Bluetooth aan je telefoon.\nDaarna werkt de stick + A-knop.');
 }
+
+connectJoyCon.addEventListener('click', connectJoyConHandler);
+
+// Polling loop
+function gamepadLoop() {
+  if (useGamepad) {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const pad = pads[0];
+
+    if (pad) {
+      // Meestal: axes[0] = X, axes[1] = Y van linker stick
+      const ax = pad.axes[0] || 0;
+      const ay = pad.axes[1] || 0;
+
+      // ax/ay zijn tussen -1 en 1
+      const nx = (ax + 1) / 2;      // 0..1
+      const ny = (ay + 1) / 2;      // 0..1
+
+      updateJoyConCursor(nx, ny);
+
+      // Meestal: button 0 = A / hoofdknop
+      const aPressed = pad.buttons[0] && pad.buttons[0].pressed;
+
+      if (aPressed && !lastAPressed) {
+        joyConClick();
+      }
+      lastAPressed = aPressed;
+    }
+  }
+
+  requestAnimationFrame(gamepadLoop);
+}
+
+gamepadLoop();
 
 function updateJoyConCursor(nx, ny) {
   const x = (nx - 0.5) * 2.0;
@@ -245,8 +249,6 @@ function updateJoyConCursor(nx, ny) {
 // JOY-CON CLICK → RAYCAST CLICK
 // -----------------------------
 function joyConClick() {
-  // Raycast vanaf handCursor richting -Z
-  const sceneEl = document.querySelector('a-scene');
   const cursorPos = handCursor.object3D.position.clone();
   const dir = new THREE.Vector3(0, 0, -1);
   handCursor.object3D.getWorldDirection(dir);
@@ -261,7 +263,6 @@ function joyConClick() {
     const hitObj = intersects[0].object;
     let targetEl = hitObj.el;
 
-    // omhoog klimmen tot we een A-Frame element hebben
     while (targetEl && !targetEl.tagName) {
       targetEl = targetEl.parentEl;
     }
@@ -271,8 +272,3 @@ function joyConClick() {
     }
   }
 }
-
-// -----------------------------
-// EVENT-LISTENERS
-// -----------------------------
-connectJoyCon.addEventListener('click', connectJoyConHandler);
