@@ -5,9 +5,6 @@
     <title>SpaceOS VR – microbricks</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- VR-browser HTML shader -->
-    <script src="https://unpkg.com/aframe-html-shader/dist/aframe-html-shader.min.js"></script>
-
     <!-- A‑Frame -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
@@ -57,17 +54,19 @@
         </a-plane>
       </a-plane>
 
-      <!-- VR-browser app -->
+      <!-- VR-mini-browser app -->
       <a-plane id="browserApp" visible="false"
                position="0 1.5 -3" width="2.2" height="1.4" color="#333">
         <a-text value="VR Browser" position="-0.9 0.6 0.01"></a-text>
 
-        <!-- Website in VR -->
-        <a-entity id="browserView"
-                  geometry="primitive: plane; width: 1.9; height: 1.1"
-                  material="shader: html; target: #webview;"
-                  position="0 0 0.01">
-        </a-entity>
+        <!-- Adresbalk -->
+        <a-plane id="addressBar" width="1.8" height="0.2" color="#555" position="0 0.35 0.01">
+          <a-text id="addressText" value="https://example.com"
+                  position="-0.85 0 0.01" wrap-count="40"></a-text>
+        </a-plane>
+
+        <!-- Content container -->
+        <a-entity id="browserContent" position="0 -0.2 0.01"></a-entity>
 
         <!-- Sluitknop -->
         <a-plane id="browserClose" position="0.95 0.6 0.01"
@@ -91,12 +90,6 @@
       <a-sky color="#111"></a-sky>
     </a-scene>
 
-    <!-- Verborgen iframe voor VR-browser -->
-    <iframe id="webview" src="https://example.com"
-            style="width:1024px;height:768px;border:none;position:absolute;left:-9999px;">
-    </iframe>
-
-    <!-- Externe JS -->
     <script src="script.js"></script>
   </body>
 </html>
