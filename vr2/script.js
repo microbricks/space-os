@@ -11,6 +11,9 @@ const cameraRig      = document.querySelector('#cameraRig');
 const handCursor     = document.querySelector('#handCursor');
 
 let scrollOffset = 0;
+let gazeTarget = null;
+let gazeStartTime = 0;
+const gazeDelay = 1000; // 1 seconde
 
 // -----------------------------
 // BROWSER OPENEN / SLUITEN
@@ -193,3 +196,47 @@ function pressKey(label) {
 // -----------------------------
 // Dot altijd in het midden
 handCursor.setAttribute("position", "0 0 -2.5");
+
+// -----------------------------
+// GAZE CLICK (auto-click)
+// -----------------------------
+let gazeTarget = null;
+let gazeStartTime = 0;
+const gazeDelay = 1000; // 1 seconde
+
+function updateGazeClick() {
+  const cursorPos = handCursor.object3D.position.clone();
+  const dir = new THREE.Vector3(0, 0, -1);
+  handCursor.object3D.getWorldDirection(dir);
+
+  const raycaster = new THREE.Raycaster(cursorPos, dir.normalize());
+  const clickableEls = Array.from(document.querySelectorAll('.clickable'))
+    .map(el => el.object3D);
+
+  const intersects = raycaster.intersectObjects(clickableEls, true);
+
+  if (intersects.length > 0) {
+    let hitObj = intersects[0].object;
+    let targetEl = hitObj.el;
+
+    while (targetEl && !targetEl.tagName) {
+      targetEl = targetEl.parentEl;
+    }
+
+    if (targetEl !== gazeTarget) {
+      gazeTarget = targetEl;
+      gazeStartTime = performance.now();
+    } else {
+      if (performance.now() - gazeStartTime > gazeDelay) {
+        targetEl.emit('click');
+        gazeStartTime = performance.now() + 999999; // voorkomt dubbel klikken
+      }
+    }
+  } else {
+    gazeTarget = null;
+  }
+
+  requestAnimationFrame(updateGazeClick);
+}
+
+updateGazeClick();
