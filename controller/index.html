@@ -5,22 +5,21 @@
   <title>Gorilla Controller (iPad)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { margin:0; font-family:system-ui,sans-serif; background:#111; color:#fff; display:flex; flex-direction:column; height:100vh; }
+    body { margin:0; background:#111; color:#fff; font-family:system-ui; display:flex; flex-direction:column; height:100vh; }
     #top { padding:10px; background:#222; }
-    #status { font-size:14px; }
     #buttons { flex:1; display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:10px; }
-    .btn { background:#333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; user-select:none; touch-action:manipulation; }
+    .btn { background:#333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
     .btn:active { background:#555; }
-    #signal { padding:10px; background:#000; font-size:12px; }
+    #qrscan, #qrreturn { padding:10px; background:#000; }
+    video { width:100%; border-radius:10px; margin-top:10px; }
     textarea { width:100%; height:80px; }
-    button { margin-top:6px; }
   </style>
 </head>
 <body>
 
 <div id="top">
-  <div>Gorilla Tag Controller (iPad)</div>
-  <div id="status">Status: geen WebRTC verbinding</div>
+  <div><b>Gorilla Tag Controller (iPad)</b></div>
+  <div id="status">Status: geen verbinding</div>
 </div>
 
 <div id="buttons">
@@ -30,16 +29,19 @@
   <div class="btn" data-action="tag">TAG</div>
 </div>
 
-<div id="signal">
-  <div><b>WebRTC Signaling (Controller → VR)</b></div>
-  <div>1. Klik op "Maak offer" en kopieer naar VR.</div>
-  <button id="makeOfferBtn">Maak offer</button>
-  <textarea id="offerOut" placeholder="Offer (copy naar VR)"></textarea>
-  <div>2. Plak hier de answer van VR en klik "Set answer".</div>
-  <textarea id="answerIn" placeholder="Answer van VR"></textarea>
-  <button id="setAnswerBtn">Set answer</button>
+<div id="qrscan">
+  <b>Scan VR QR‑code</b><br>
+  <button id="startScanBtn">Start QR‑scan</button>
+  <video id="video" autoplay></video>
 </div>
 
+<div id="qrreturn">
+  <b>QR‑code terug naar VR</b><br>
+  <canvas id="qrCanvas"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
 <script src="controller.js"></script>
 </body>
 </html>
