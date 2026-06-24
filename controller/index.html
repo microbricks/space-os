@@ -17,9 +17,12 @@
     #top {
       padding: 10px;
       background: #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     #status {
-      font-size: 14px;
+      font-size: 13px;
     }
     #buttons {
       flex: 1;
@@ -41,17 +44,21 @@
     .btn:active {
       background: #555;
     }
-    #tm-area {
+    #tm-area, #builder {
       padding: 10px;
       background: #000;
       font-size: 13px;
+    }
+    input, button {
+      font-size: 13px;
+      margin-top: 4px;
     }
   </style>
 </head>
 <body>
 
 <div id="top">
-  <div>Gorilla Tag Controller (iPad)</div>
+  <div><b>Gorilla Tag Controller (iPad)</b></div>
   <div id="status">Status: niet verbonden</div>
 </div>
 
@@ -62,9 +69,16 @@
   <div class="btn" data-action="tag">TAG</div>
 </div>
 
+<div id="builder">
+  <div><b>UI‑builder</b></div>
+  <div>Label: <input id="newLabel" placeholder="Bijv. DASH"></div>
+  <div>Action key: <input id="newAction" placeholder="bijv. dash"></div>
+  <button id="addBtn">Voeg knop toe</button>
+</div>
+
 <div id="tm-area">
   <div><b>Teachable Machine</b></div>
-  <div>Model URL: <span id="modelUrlLabel">nog niet geladen</span></div>
+  <div>Model URL: <span id="modelUrlLabel">geen model geladen</span></div>
   <button id="loadModelBtn">Laad TM model</button>
   <div id="tmStatus">TM: niet actief</div>
 </div>
