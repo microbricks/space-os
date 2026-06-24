@@ -202,4 +202,4 @@ function updateMotionCursor() {
   requestAnimationFrame(updateMotionCursor);
 }
 
-updateMotionCursor();
+0 0 -2.5
