@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SpaceOS VR (Motion Controls)</title>
+  <title>SpaceOS VR (Gaze + Click)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <style>
@@ -13,7 +13,7 @@
 
 <a-scene vr-mode-ui="enabled: true">
 
-  <!-- Camera + raycaster voor touch -->
+  <!-- Camera + raycaster voor gaze/touch -->
   <a-entity id="cameraRig"
             camera
             look-controls
@@ -21,19 +21,25 @@
     <a-cursor fuse="false"></a-cursor>
   </a-entity>
 
-  <!-- Motion-controlled cursor -->
+  <!-- Dot in het midden -->
   <a-sphere id="handCursor"
             radius="0.03"
             color="#FFD700"
-            position="0 1.5 -2.5">
+            position="0 0 -2.5">
   </a-sphere>
 
   <!-- Dock -->
   <a-entity id="dock" position="0 0.5 -3">
     <a-circle id="openBrowser"
-              radius="0.15"
+              radius="0.18"
               color="#7ED321"
               position="-0.4 0 0"
+              class="clickable"></a-circle>
+
+    <a-circle id="dummyButton"
+              radius="0.18"
+              color="#4A90E2"
+              position="0.4 0 0"
               class="clickable"></a-circle>
   </a-entity>
 
