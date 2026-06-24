@@ -2,51 +2,32 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Gorilla Tag VR (WebRTC Controller)</title>
+  <title>Gorilla Tag VR (QR Pairing)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 </head>
 <body>
 
-<a-scene vr-mode-ui="enabled: true">
-
+<a-scene>
   <a-entity id="cameraRig" position="0 1.6 0">
     <a-entity camera look-controls></a-entity>
   </a-entity>
 
-  <a-entity id="gorillaWorld">
-    <a-plane color="#228B22" width="30" height="30" rotation="-90 0 0" position="0 0 0"></a-plane>
-
-    <a-cylinder color="#8B4513" height="4" radius="0.4" position="0 2 -5"></a-cylinder>
-    <a-sphere color="#2ECC71" radius="2" position="0 4 -5"></a-sphere>
-
-    <a-box color="#A0522D" width="3" height="0.3" depth="3" position="3 2 -4"></a-box>
-    <a-box color="#A0522D" width="3" height="0.3" depth="3" position="-3 3 -6"></a-box>
-
-    <a-plane color="#000" width="3" height="1.2" position="0 2 -3">
-      <a-text value="Gorilla Tag VR
-Besturing via iPad (WebRTC):
-- forward
-- jump
-- climb
-- tag"
-              align="center" wrap-count="30" position="-1.3 0.3 0.01"></a-text>
-    </a-plane>
-  </a-entity>
-
+  <a-plane color="#228B22" width="30" height="30" rotation="-90 0 0"></a-plane>
   <a-sky color="#87CEEB"></a-sky>
 </a-scene>
 
-<div style="position:fixed;bottom:0;left:0;right:0;background:#000a;color:#fff;font-family:system-ui;font-size:12px;padding:6px;">
-  <div><b>WebRTC Signaling (VR‑kant)</b></div>
-  <div>1. Plak hier de offer van de iPad en klik "Set offer & maak answer".</div>
-  <textarea id="offerIn" style="width:100%;height:70px;"></textarea>
-  <button id="setOfferBtn">Set offer & maak answer</button>
-  <div>2. Kopieer de answer hieronder terug naar de iPad.</div>
-  <textarea id="answerOut" style="width:100%;height:70px;"></textarea>
-  <div id="vrStatus">Status: geen WebRTC verbinding</div>
+<div style="position:fixed;bottom:0;left:0;right:0;background:#000a;color:#fff;padding:10px;font-family:system-ui;">
+  <b>VR QR‑pairing</b><br>
+  <canvas id="offerQR"></canvas><br><br>
+
+  <b>Scan iPad QR‑code</b><br>
+  <video id="video" autoplay style="width:100%;"></video>
+  <div id="status">Status: wacht op iPad…</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
 <script src="vr.js"></script>
 </body>
 </html>
