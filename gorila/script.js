@@ -10,13 +10,11 @@ window.addEventListener("gamepadconnected", () => {
   for (const gp of pads) {
     if (!gp) continue;
 
-    // Linker Joy-Con
     if (gp.id.includes("Joy-Con (L)")) {
       leftJoycon = gp.index;
       console.log("Linker Joy-Con gevonden op kanaal", gp.index);
     }
 
-    // Rechter Joy-Con
     if (gp.id.includes("Joy-Con (R)")) {
       rightJoycon = gp.index;
       console.log("Rechter Joy-Con gevonden op kanaal", gp.index);
@@ -33,11 +31,10 @@ let velocityY = 0;
 let grounded = true;
 const gravity = -0.01;
 
-const armSwingForce = 0.06;   // snelheid vooruit
-const jumpForce = 0.18;       // springkracht
-const climbForce = 0.10;      // klimkracht
+const armSwingForce = 0.06;
+const jumpForce = 0.18;
+const climbForce = 0.10;
 
-// Vorige Y-positie van sticks (arm swing detectie)
 let prevLeftY = 0;
 let prevRightY = 0;
 
@@ -47,15 +44,12 @@ let prevRightY = 0;
 function gorillaMove() {
   const pads = navigator.getGamepads();
 
-  // -------------------------------
-  // 1. ARM SWING LOCOMOTION
-  // -------------------------------
+  // ARM SWING LOCOMOTION
   if (leftJoycon !== null) {
     const gp = pads[leftJoycon];
     if (gp) {
       const ly = gp.axes[1];
       const swing = prevLeftY - ly;
-
       if (swing > 0.25) moveForward();
       prevLeftY = ly;
     }
@@ -66,15 +60,12 @@ function gorillaMove() {
     if (gp) {
       const ry = gp.axes[1];
       const swing = prevRightY - ry;
-
       if (swing > 0.25) moveForward();
       prevRightY = ry;
     }
   }
 
-  // -------------------------------
-  // 2. JUMP (A-knop)
-  // -------------------------------
+  // JUMP (A)
   if (rightJoycon !== null) {
     const gp = pads[rightJoycon];
     if (gp && gp.buttons[0].pressed && grounded) {
@@ -83,9 +74,7 @@ function gorillaMove() {
     }
   }
 
-  // -------------------------------
-  // 3. CLIMB (X-knop)
-  // -------------------------------
+  // CLIMB (X)
   if (rightJoycon !== null) {
     const gp = pads[rightJoycon];
     if (gp && gp.buttons[2].pressed) {
@@ -93,9 +82,7 @@ function gorillaMove() {
     }
   }
 
-  // -------------------------------
-  // 4. TAG EFFECT (B-knop)
-  // -------------------------------
+  // TAG (B)
   if (rightJoycon !== null) {
     const gp = pads[rightJoycon];
     if (gp && gp.buttons[1].pressed) {
@@ -104,9 +91,7 @@ function gorillaMove() {
     }
   }
 
-  // -------------------------------
-  // 5. GRAVITY
-  // -------------------------------
+  // GRAVITY
   if (!grounded) {
     velocityY += gravity;
     rig.object3D.position.y += velocityY;
