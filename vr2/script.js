@@ -1,381 +1,216 @@
-// ELEMENTS
-const handCursor = document.querySelector('#handCursor');
-const cameraRig  = document.querySelector('#cameraRig');
+// ===============================
+// UI / WINDOW MANAGER
+// ===============================
+const windows = {
+  browser: document.querySelector("#win-browser"),
+  notes: document.querySelector("#win-notes"),
+  settings: document.querySelector("#win-settings"),
+};
 
-// Browser
-const openBrowser    = document.querySelector('#openBrowser');
-const browserApp     = document.querySelector('#browserApp');
-const browserClose   = document.querySelector('#browserClose');
-const browserContent = document.querySelector('#browserContent');
-const addressText    = document.querySelector('#addressText');
-const keyboard       = document.querySelector('#keyboard');
-
-// Clock
-const openClock  = document.querySelector('#openClock');
-const clockApp   = document.querySelector('#clockApp');
-const clockText  = document.querySelector('#clockText');
-const clockClose = document.querySelector('#clockClose');
-
-// Notes
-const openNotes      = document.querySelector('#openNotes');
-const notesApp       = document.querySelector('#notesApp');
-const notesText      = document.querySelector('#notesText');
-const notesAdd       = document.querySelector('#notesAdd');
-const notesClose     = document.querySelector('#notesClose');
-const notesKeyboard  = document.querySelector('#notesKeyboard');
-
-// Settings
-const openSettings  = document.querySelector('#openSettings');
-const settingsApp   = document.querySelector('#settingsApp');
-const settingsClose = document.querySelector('#settingsClose');
-const cursorSmall   = document.querySelector('#cursorSmall');
-const cursorLarge   = document.querySelector('#cursorLarge');
-const gazeFast      = document.querySelector('#gazeFast');
-const gazeSlow      = document.querySelector('#gazeSlow');
-
-// DOT PULSE
-let pulseTimer = null;
-function pulseCursor() {
-  handCursor.setAttribute('radius', 0.06);
-  clearTimeout(pulseTimer);
-  pulseTimer = setTimeout(() => {
-    handCursor.setAttribute('radius', 0.03);
-  }, 150);
+function openWindow(name) {
+  Object.values(windows).forEach(w => w.style.display = "none");
+  if (windows[name]) windows[name].style.display = "flex";
 }
 
-// -----------------------------
-// BROWSER OPEN/CLOSE
-// -----------------------------
-openBrowser.addEventListener('click', () => {
-  browserApp.setAttribute('visible', true);
-  buildKeyboard();
-  loadPage('https://example.com');
-  pulseCursor();
-});
-
-browserClose.addEventListener('click', () => {
-  browserApp.setAttribute('visible', false);
-  pulseCursor();
-});
-
-// -----------------------------
-// MINI BROWSER ENGINE
-// -----------------------------
-async function loadPage(url) {
-  addressText.setAttribute('value', url);
-  browserContent.innerHTML = '';
-
-  try {
-    const response = await fetch(url);
-    const html = await response.text();
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    const items = extractContent(doc);
-    renderContent(items);
-  } catch {
-    showError("Kan pagina niet laden");
-  }
+function closeWindow(name) {
+  if (windows[name]) windows[name].style.display = "none";
 }
 
-function extractContent(doc) {
-  const items = [];
-  doc.body.querySelectorAll('*').forEach(el => {
-    if (el.tagName === 'IMG' && el.src) {
-      items.push({ type: 'image', src: el.src });
-    } else if (el.tagName === 'A' && el.href) {
-      items.push({ type: 'link', text: el.innerText || el.href, href: el.href });
-    } else if (el.innerText && el.innerText.trim().length > 0) {
-      items.push({ type: 'text', text: el.innerText });
-    }
+document.querySelectorAll(".dock-btn[data-app]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const app = btn.getAttribute("data-app");
+    openWindow(app);
   });
-  return items.slice(0, 120);
-}
+});
 
-function renderContent(items) {
-  let y = 0;
-  items.forEach(item => {
-    if (item.type === 'text') {
-      const t = document.createElement('a-text');
-      t.setAttribute('value', item.text);
-      t.setAttribute('wrap-count', 50);
-      t.setAttribute('position', `-1 ${y} 0`);
-      browserContent.appendChild(t);
-      y -= 0.15;
-    }
-    if (item.type === 'link') {
-      const btn = document.createElement('a-plane');
-      btn.setAttribute('width', '2');
-      btn.setAttribute('height', '0.15');
-      btn.setAttribute('color', '#2a6df4');
-      btn.setAttribute('position', `0 ${y} 0`);
-      btn.setAttribute('class', 'clickable');
+document.querySelectorAll(".window-close").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const app = btn.getAttribute("data-close");
+    closeWindow(app);
+  });
+});
 
-      const txt = document.createElement('a-text');
-      txt.setAttribute('value', item.text);
-      txt.setAttribute('position', '-0.95 0 0.01');
-      txt.setAttribute('wrap-count', 60);
+// ===============================
+// CAMERA AR BACKGROUND
+// ===============================
+const cameraBtn = document.querySelector("#cameraBgBtn");
+const bgVideo = document.querySelector("#bgVideo");
+const arStatus = document.querySelector("#arStatus");
+let arActive = false;
+let camStream = null;
 
-      btn.appendChild(txt);
-      browserContent.appendChild(btn);
-
-      btn.addEventListener('click', () => {
-        loadPage(item.href);
-        pulseCursor();
+cameraBtn.addEventListener("click", async () => {
+  if (!arActive) {
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
       });
+      bgVideo.srcObject = camStream;
+      bgVideo.style.display = "block";
 
-      y -= 0.2;
+      const scene = document.querySelector("a-scene");
+      scene.renderer.setClearColor(0x000000, 0);
+      document.querySelector("#sky").setAttribute("visible", "false");
+
+      arActive = true;
+      arStatus.textContent = "Aan";
+      cameraBtn.textContent = "AR Background uit";
+      console.log("AR background actief");
+    } catch (err) {
+      console.error("Camera fout:", err);
     }
-    if (item.type === 'image') {
-      const img = document.createElement('a-image');
-      img.setAttribute('src', item.src);
-      img.setAttribute('width', '2');
-      img.setAttribute('height', '1');
-      img.setAttribute('position', `0 ${y} 0`);
-      browserContent.appendChild(img);
-      y -= 1.2;
-    }
-  });
-}
-
-function showError(msg) {
-  const t = document.createElement('a-text');
-  t.setAttribute('value', msg);
-  t.setAttribute('color', 'red');
-  t.setAttribute('position', '-1 0 0');
-  browserContent.appendChild(t);
-}
-
-// -----------------------------
-// VR KEYBOARD (BROWSER)
-// -----------------------------
-function buildKeyboard() {
-  keyboard.innerHTML = '';
-
-  const keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./';
-  let x = -1, y = 0.4;
-
-  keys.split('').forEach(char => {
-    addKey(char, x, y);
-    x += 0.25;
-    if (x > 1) { x = -1; y -= 0.25; }
-  });
-
-  addKey('BACK', -0.5, -0.2);
-  addKey('ENTER', 0.5, -0.2);
-}
-
-function addKey(label, x, y) {
-  const key = document.createElement('a-plane');
-  key.setAttribute('width', '0.22');
-  key.setAttribute('height', '0.22');
-  key.setAttribute('color', '#444');
-  key.setAttribute('position', `${x} ${y} 0`);
-  key.setAttribute('class', 'clickable');
-
-  const txt = document.createElement('a-text');
-  txt.setAttribute('value', label);
-  txt.setAttribute('align', 'center');
-  txt.setAttribute('position', '-0.07 0 0.01');
-
-  key.appendChild(txt);
-  keyboard.appendChild(key);
-
-  key.addEventListener('click', () => {
-    pressKey(label);
-    pulseCursor();
-  });
-}
-
-function pressKey(label) {
-  let current = addressText.getAttribute('value');
-
-  if (label === 'BACK') {
-    current = current.slice(0, -1);
-  } else if (label === 'ENTER') {
-    loadPage(current);
   } else {
-    current += label.toLowerCase();
+    if (camStream) {
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    bgVideo.style.display = "none";
+    const scene = document.querySelector("a-scene");
+    scene.renderer.setClearColor(0x05060a, 1);
+    document.querySelector("#sky").setAttribute("visible", "true");
+
+    arActive = false;
+    arStatus.textContent = "Uit";
+    cameraBtn.textContent = "AR Background";
+    console.log("AR background uit");
+  }
+});
+
+// ===============================
+// JOY-CON + KEYBOARD LOCOMOTION
+// ===============================
+const rig = document.querySelector("#cameraRig");
+
+// Joy-Con detectie
+let leftJoycon = null;
+let rightJoycon = null;
+const joyconStatus = document.querySelector("#joyconStatus");
+
+window.addEventListener("gamepadconnected", () => {
+  const pads = navigator.getGamepads();
+  for (const gp of pads) {
+    if (!gp) continue;
+    if (gp.id.includes("Joy-Con (L)")) leftJoycon = gp.index;
+    if (gp.id.includes("Joy-Con (R)")) rightJoycon = gp.index;
+  }
+  if (leftJoycon !== null || rightJoycon !== null) {
+    joyconStatus.textContent = "Actief";
+  }
+});
+
+// Keyboard
+const keys = {};
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+
+// Movement vars
+let velocityY = 0;
+let grounded = true;
+const gravity = -0.01;
+
+const armSwingForce = 0.06;
+const keyboardForce = 0.08;
+const jumpForce = 0.18;
+const climbForce = 0.10;
+
+let prevLeftY = 0;
+let prevRightY = 0;
+
+// Movement helpers
+function moveForward(speed) {
+  const dir = new THREE.Vector3(0, 0, -1);
+  rig.object3D.getWorldDirection(dir);
+  dir.y = 0;
+  dir.normalize();
+  dir.multiplyScalar(speed);
+  rig.object3D.position.add(dir);
+}
+
+function moveBackward(speed) {
+  const dir = new THREE.Vector3(0, 0, 1);
+  rig.object3D.getWorldDirection(dir);
+  dir.y = 0;
+  dir.normalize();
+  dir.multiplyScalar(speed);
+  rig.object3D.position.add(dir);
+}
+
+function moveLeft(speed) {
+  const dir = new THREE.Vector3(-1, 0, 0);
+  rig.object3D.position.addScaledVector(dir, speed);
+}
+
+function moveRight(speed) {
+  const dir = new THREE.Vector3(1, 0, 0);
+  rig.object3D.position.addScaledVector(dir, speed);
+}
+
+// Main locomotion loop
+function locomotionLoop() {
+  const pads = navigator.getGamepads();
+
+  // Joy-Con arm swing
+  if (leftJoycon !== null) {
+    const gp = pads[leftJoycon];
+    if (gp) {
+      const ly = gp.axes[1];
+      const swing = prevLeftY - ly;
+      if (swing > 0.25) moveForward(armSwingForce);
+      prevLeftY = ly;
+    }
   }
 
-  addressText.setAttribute('value', current);
-}
+  if (rightJoycon !== null) {
+    const gp = pads[rightJoycon];
+    if (gp) {
+      const ry = gp.axes[1];
+      const swing = prevRightY - ry;
+      if (swing > 0.25) moveForward(armSwingForce);
+      prevRightY = ry;
 
-// -----------------------------
-// NOTES KEYBOARD
-// -----------------------------
-function buildNotesKeyboard() {
-  notesKeyboard.innerHTML = '';
-
-  const keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./';
-  let x = -1, y = 0.4;
-
-  keys.split('').forEach(char => {
-    addNotesKey(char, x, y);
-    x += 0.25;
-    if (x > 1) { x = -1; y -= 0.25; }
-  });
-
-  addNotesKey('BACK', -0.5, -0.2);
-  addNotesKey('ENTER', 0.5, -0.2);
-}
-
-function addNotesKey(label, x, y) {
-  const key = document.createElement('a-plane');
-  key.setAttribute('width', '0.22');
-  key.setAttribute('height', '0.22');
-  key.setAttribute('color', '#444');
-  key.setAttribute('position', `${x} ${y} 0`);
-  key.setAttribute('class', 'clickable');
-
-  const txt = document.createElement('a-text');
-  txt.setAttribute('value', label);
-  txt.setAttribute('align', 'center');
-  txt.setAttribute('position', '-0.07 0 0.01');
-
-  key.appendChild(txt);
-  notesKeyboard.appendChild(key);
-
-  key.addEventListener('click', () => {
-    pressNotesKey(label);
-    pulseCursor();
-  });
-}
-
-function pressNotesKey(label) {
-  let current = notesText.getAttribute('value');
-
-  if (label === 'BACK') {
-    current = current.slice(0, -1);
-  } else if (label === 'ENTER') {
-    current += "\n";
-  } else {
-    current += label.toLowerCase();
+      // Jump (A)
+      if (gp.buttons[0].pressed && grounded) {
+        velocityY = jumpForce;
+        grounded = false;
+      }
+      // Climb (X)
+      if (gp.buttons[2].pressed) {
+        rig.object3D.position.y += climbForce;
+      }
+      // Tag (B)
+      if (gp.buttons[1].pressed) {
+        rig.object3D.position.y += 0.1;
+        setTimeout(() => rig.object3D.position.y -= 0.1, 150);
+      }
+    }
   }
 
-  notesText.setAttribute('value', current);
-}
+  // Keyboard locomotion
+  if (keys["w"]) moveForward(keyboardForce);
+  if (keys["s"]) moveBackward(keyboardForce);
+  if (keys["a"]) moveLeft(keyboardForce);
+  if (keys["d"]) moveRight(keyboardForce);
 
-// -----------------------------
-// CLOCK APP
-// -----------------------------
-openClock.addEventListener('click', () => {
-  clockApp.setAttribute('visible', true);
-  pulseCursor();
-});
-
-clockClose.addEventListener('click', () => {
-  clockApp.setAttribute('visible', false);
-  pulseCursor();
-});
-
-setInterval(() => {
-  clockText.setAttribute('value', new Date().toTimeString().split(' ')[0]);
-}, 500);
-
-// -----------------------------
-// NOTES APP
-// -----------------------------
-openNotes.addEventListener('click', () => {
-  notesApp.setAttribute('visible', true);
-  buildNotesKeyboard();
-  pulseCursor();
-});
-
-notesClose.addEventListener('click', () => {
-  notesApp.setAttribute('visible', false);
-  pulseCursor();
-});
-
-notesAdd.addEventListener('click', () => {
-  notesText.setAttribute('value', notesText.getAttribute('value') + "\n- Nieuwe notitie");
-  pulseCursor();
-});
-
-// -----------------------------
-// SETTINGS APP
-// -----------------------------
-openSettings.addEventListener('click', () => {
-  settingsApp.setAttribute('visible', true);
-  pulseCursor();
-});
-
-settingsClose.addEventListener('click', () => {
-  settingsApp.setAttribute('visible', false);
-  pulseCursor();
-});
-
-// Cursor grootte
-cursorSmall.addEventListener('click', () => {
-  handCursor.setAttribute('radius', 0.02);
-  pulseCursor();
-});
-
-cursorLarge.addEventListener('click', () => {
-  handCursor.setAttribute('radius', 0.06);
-  pulseCursor();
-});
-
-// Gaze snelheid
-let gazeTime = 1000;
-
-gazeFast.addEventListener('click', () => {
-  gazeTime = 500;
-  pulseCursor();
-});
-
-gazeSlow.addEventListener('click', () => {
-  gazeTime = 1500;
-  pulseCursor();
-});
-
-// -----------------------------
-// GAZE CLICK
-// -----------------------------
-let gazeTarget = null;
-let gazeStart = 0;
-
-function updateGaze() {
-  const origin = new THREE.Vector3();
-  handCursor.object3D.getWorldPosition(origin);
-
-  const direction = new THREE.Vector3(0, 0, -1);
-  handCursor.object3D.getWorldDirection(direction);
-
-  const raycaster = new THREE.Raycaster(origin, direction.normalize());
-
-  const clickableEls = Array.from(document.querySelectorAll('.clickable'));
-  const meshes = clickableEls.map(el => el.object3D);
-
-  const hits = raycaster.intersectObjects(meshes, true);
-
-  if (hits.length > 0) {
-    let obj = hits[0].object;
-    while (obj && !obj.el) obj = obj.parent;
-    const el = obj?.el;
-
-    if (!el) {
-      gazeTarget = null;
-      return requestAnimationFrame(updateGaze);
-    }
-
-    if (el !== gazeTarget) {
-      gazeTarget = el;
-      gazeStart = performance.now();
-    }
-
-    if (performance.now() - gazeStart > gazeTime) {
-      el.emit('click');
-      pulseCursor();
-      gazeStart = performance.now() + 999999;
-    }
-
-  } else {
-    gazeTarget = null;
+  if (keys[" "] && grounded) {
+    velocityY = jumpForce;
+    grounded = false;
+  }
+  if (keys["Shift"]) {
+    rig.object3D.position.y += climbForce;
   }
 
-  requestAnimationFrame(updateGaze);
+  // Gravity
+  if (!grounded) {
+    velocityY += gravity;
+    rig.object3D.position.y += velocityY;
+    if (rig.object3D.position.y <= 1.6) {
+      rig.object3D.position.y = 1.6;
+      velocityY = 0;
+      grounded = true;
+    }
+  }
+
+  requestAnimationFrame(locomotionLoop);
 }
 
-updateGaze();
+locomotionLoop();
