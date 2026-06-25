@@ -1,20 +1,59 @@
-<video id="bgVideo" autoplay playsinline style="
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: -1;
-  display: none;
-"></video>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>SpaceOS Camera Background</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
 
-<a-scene renderer="colorManagement: true; alpha: true;">
-  <a-entity id="cameraRig" position="0 1.6 0">
-    <a-entity camera look-controls></a-entity>
-  </a-entity>
-  <a-sky color="#000000"></a-sky>
-</a-scene>
+    #camVideo {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+      display: none;
+    }
 
-<button id="cameraBgBtn">Camera Background</button>
+    #cameraBtn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      padding: 10px 14px;
+      background: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
 
-<script src="spaceos.js"></script>
+  <!-- Camera video -->
+  <video id="camVideo" autoplay playsinline muted></video>
+
+  <!-- UI knop -->
+  <button id="cameraBtn">Camera achtergrond</button>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- VR Scene -->
+  <a-scene id="scene" renderer="alpha: true; colorManagement: true">
+    <a-entity id="rig" position="0 1.6 0">
+      <a-entity camera look-controls></a-entity>
+    </a-entity>
+
+    <!-- Een simpel object zodat je ziet dat VR werkt -->
+    <a-box position="0 1.5 -2" color="#4CC3D9"></a-box>
+  </a-scene>
+
+  <!-- Jouw JS bestand -->
+  <script src="spaceos.js"></script>
+
+</body>
+</html>
