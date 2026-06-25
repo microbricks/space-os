@@ -1,0 +1,20 @@
+<video id="bgVideo" autoplay playsinline style="
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  display: none;
+"></video>
+
+<a-scene renderer="colorManagement: true; alpha: true;">
+  <a-entity id="cameraRig" position="0 1.6 0">
+    <a-entity camera look-controls></a-entity>
+  </a-entity>
+  <a-sky color="#000000"></a-sky>
+</a-scene>
+
+<button id="cameraBgBtn">Camera Background</button>
+
+<script src="spaceos.js"></script>
