@@ -29,30 +29,42 @@
       border-radius: 6px;
       font-size: 14px;
     }
+
+    /* SpaceOS melding */
+    #melding {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 20;
+      display: none;
+      backdrop-filter: blur(6px);
+    }
   </style>
 </head>
 <body>
 
-  <!-- Camera video -->
   <video id="camVideo" autoplay playsinline muted></video>
 
-  <!-- UI knop -->
   <button id="cameraBtn">Camera achtergrond</button>
 
-  <!-- A-Frame -->
+  <div id="melding"></div>
+
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-  <!-- VR Scene -->
   <a-scene id="scene" renderer="alpha: true; colorManagement: true">
     <a-entity id="rig" position="0 1.6 0">
       <a-entity camera look-controls></a-entity>
     </a-entity>
 
-    <!-- Een simpel object zodat je ziet dat VR werkt -->
     <a-box position="0 1.5 -2" color="#4CC3D9"></a-box>
   </a-scene>
 
-  <!-- Jouw JS bestand -->
   <script src="spaceos.js"></script>
 
 </body>
