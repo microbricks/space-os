@@ -1,8 +1,19 @@
 const camVideo = document.getElementById("camVideo");
 const cameraBtn = document.getElementById("cameraBtn");
 const sceneEl = document.getElementById("scene");
+const melding = document.getElementById("melding");
 
-// Renderer transparant maken zodra A-Frame klaar is
+// SpaceOS melding functie
+function showMelding(text) {
+  melding.textContent = text;
+  melding.style.display = "block";
+
+  setTimeout(() => {
+    melding.style.display = "none";
+  }, 3000);
+}
+
+// Renderer transparant maken
 sceneEl.addEventListener("loaded", () => {
   const renderer = sceneEl.renderer;
   if (renderer) {
@@ -10,43 +21,38 @@ sceneEl.addEventListener("loaded", () => {
   }
 });
 
-// 🔵 Toestemming checken + melding tonen
+// Toestemming checken
 async function vraagCameraToestemming() {
   if (!navigator.permissions) {
-    console.warn("Permissions API niet beschikbaar");
+    showMelding("Kan permissies niet controleren, proberen...");
     return true;
   }
 
   try {
     const status = await navigator.permissions.query({ name: "camera" });
 
-    console.log("Camera permissie status:", status.state);
-
     if (status.state === "granted") {
-      alert("✔ Camera toegestaan — je kunt nu de achtergrond gebruiken.");
+      showMelding("✔ Camera toegestaan");
       return true;
     }
 
     if (status.state === "prompt") {
-      alert("ℹ Je krijgt nu een pop-up om camera-toestemming te geven.");
+      showMelding("ℹ Toestemming wordt gevraagd...");
       return true;
     }
 
     if (status.state === "denied") {
-      alert(
-        "❌ Je telefoon blokkeert de camera.\n\n" +
-        "Ga naar:\nInstellingen → Apps → Chrome → Machtigingen → Camera → Toestaan"
-      );
+      showMelding("❌ Camera geblokkeerd in instellingen");
       return false;
     }
 
   } catch (err) {
-    console.warn("Kon permissie niet checken:", err);
+    showMelding("⚠ Kan permissie niet controleren");
     return true;
   }
 }
 
-// 🔵 Camera starten
+// Camera starten
 cameraBtn.addEventListener("click", async () => {
   const toestemming = await vraagCameraToestemming();
   if (!toestemming) return;
@@ -60,11 +66,9 @@ cameraBtn.addEventListener("click", async () => {
     camVideo.srcObject = stream;
     camVideo.style.display = "block";
 
-    alert("🎥 Camera achtergrond is nu actief!");
-    console.log("Camera achtergrond actief");
+    showMelding("🎥 Camera achtergrond actief");
 
   } catch (err) {
-    console.error("Camera fout:", err);
-    alert("Kon camera niet openen: " + err.message);
+    showMelding("❌ Camera fout: " + err.message);
   }
 });
