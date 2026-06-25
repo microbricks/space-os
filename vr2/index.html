@@ -2,150 +2,187 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SpaceOS VR (Apps + Keyboard + Settings)</title>
+  <title>SpaceOS Pro VR</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="script.js" defer></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; overflow:hidden; font-family: system-ui, sans-serif; }
+
+    /* CAMERA ACHTERGROND */
+    #bgVideo {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -2;
+      display: none;
+    }
+
+    /* OS UI */
+    #dock {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    .dock-btn {
+      padding: 10px 18px;
+      background: rgba(10,10,10,0.85);
+      color: #fff;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 14px;
+      backdrop-filter: blur(10px);
+    }
+
+    /* WINDOWS */
+    .window {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60vw;
+      max-width: 800px;
+      height: 60vh;
+      background: rgba(15,15,20,0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 9;
+      backdrop-filter: blur(12px);
+    }
+
+    .window-header {
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 14px;
+    }
+
+    .window-title {
+      opacity: 0.9;
+    }
+
+    .window-close {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: none;
+      background: #ff5f57;
+      cursor: pointer;
+    }
+
+    .window-body {
+      padding: 10px;
+      height: 100%;
+      overflow: auto;
+      font-size: 14px;
+    }
+
+    #notesArea {
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      resize: none;
+    }
+
+    #browserFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 10px;
+      background: #111;
+    }
+
+    #settingsBody label {
+      display: block;
+      margin-bottom: 8px;
+    }
+  </style>
 </head>
 <body>
 
-<a-scene vr-mode-ui="enabled: true">
+<!-- CAMERA ACHTERGROND -->
+<video id="bgVideo" autoplay playsinline></video>
 
-  <!-- Camera -->
-  <a-entity id="cameraRig"
-            camera
-            look-controls
-            raycaster="objects: .clickable">
-    <a-cursor fuse="false"></a-cursor>
+<!-- DOCK / HOMESCREEN -->
+<div id="dock">
+  <button class="dock-btn" data-app="browser">Browser</button>
+  <button class="dock-btn" data-app="notes">Notities</button>
+  <button class="dock-btn" data-app="settings">Instellingen</button>
+  <button class="dock-btn" id="cameraBgBtn">AR Background</button>
+</div>
+
+<!-- WINDOWS -->
+<div class="window" id="win-browser">
+  <div class="window-header">
+    <span class="window-title">VR Browser</span>
+    <button class="window-close" data-close="browser"></button>
+  </div>
+  <div class="window-body">
+    <iframe id="browserFrame" src="https://example.com"></iframe>
+  </div>
+</div>
+
+<div class="window" id="win-notes">
+  <div class="window-header">
+    <span class="window-title">Notities</span>
+    <button class="window-close" data-close="notes"></button>
+  </div>
+  <div class="window-body">
+    <textarea id="notesArea" placeholder="Schrijf hier je VR-notities..."></textarea>
+  </div>
+</div>
+
+<div class="window" id="win-settings">
+  <div class="window-header">
+    <span class="window-title">SpaceOS Instellingen</span>
+    <button class="window-close" data-close="settings"></button>
+  </div>
+  <div class="window-body" id="settingsBody">
+    <label>
+      Joy-Con locomotion:
+      <span id="joyconStatus">Niet gedetecteerd</span>
+    </label>
+    <label>
+      Keyboard locomotion:
+      <span id="keyboardStatus">Actief (WASD)</span>
+    </label>
+    <label>
+      AR Background:
+      <span id="arStatus">Uit</span>
+    </label>
+  </div>
+</div>
+
+<!-- VR SCENE -->
+<a-scene>
+  <a-entity id="cameraRig" position="0 1.6 0">
+    <a-entity camera look-controls></a-entity>
   </a-entity>
 
-  <!-- Dot -->
-  <a-sphere id="handCursor"
-            radius="0.03"
-            color="#FFD700"
-            position="0 0 -2.5">
-  </a-sphere>
-
-  <!-- Dock -->
-  <a-entity id="dock" position="0 0.5 -3">
-    <a-circle id="openBrowser"  radius="0.18" color="#7ED321" position="-0.9 0 0" class="clickable"></a-circle>
-    <a-circle id="openClock"    radius="0.18" color="#4A90E2" position="-0.3 0 0" class="clickable"></a-circle>
-    <a-circle id="openNotes"    radius="0.18" color="#F5A623" position="0.3 0 0"  class="clickable"></a-circle>
-    <a-circle id="openSettings" radius="0.18" color="#9B9B9B" position="0.9 0 0"  class="clickable"></a-circle>
-  </a-entity>
-
-  <!-- Browser App -->
-  <a-plane id="browserApp" visible="false"
-           position="0 1.5 -3"
-           width="2.4" height="2"
-           color="#333">
-
-    <a-text value="VR Browser" position="-1.1 0.9 0.01"></a-text>
-
-    <a-plane id="addressBar"
-             width="2"
-             height="0.25"
-             color="#555"
-             position="0 0.6 0.01">
-      <a-text id="addressText"
-              value="https://youtube.com"
-              position="-0.95 0 0.01"
-              wrap-count="60"></a-text>
-    </a-plane>
-
-    <a-entity id="browserContent" position="0 -0.1 0.01"></a-entity>
-
-    <a-plane id="browserClose"
-             position="1.1 0.9 0.01"
-             width="0.2" height="0.2"
-             color="red"
-             class="clickable">
-      <a-text value="X" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-
-    <!-- Browser keyboard -->
-    <a-entity id="keyboard" position="0 -0.9 0.02"></a-entity>
-  </a-plane>
-
-  <!-- Clock App -->
-  <a-plane id="clockApp" visible="false"
-           position="-1.5 1.5 -3"
-           width="1.4" height="0.9"
-           color="#222">
-    <a-text value="Klok" position="-0.6 0.3 0.01"></a-text>
-    <a-text id="clockText" value="00:00:00" position="-0.6 0 0.01"></a-text>
-    <a-plane id="clockClose"
-             position="0.6 0.3 0.01"
-             width="0.2" height="0.2"
-             color="red"
-             class="clickable">
-      <a-text value="X" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-  </a-plane>
-
-  <!-- Notes App -->
-  <a-plane id="notesApp" visible="false"
-           position="1.5 1.5 -3"
-           width="1.8" height="1.1"
-           color="#222">
-    <a-text value="Notities" position="-0.8 0.4 0.01"></a-text>
-
-    <a-text id="notesText"
-            value="- Eerste notitie"
-            position="-0.8 0.1 0.01"
-            wrap-count="32"></a-text>
-
-    <a-plane id="notesAdd"
-             position="-0.4 -0.3 0.01"
-             width="0.5" height="0.25"
-             color="#4A90E2"
-             class="clickable">
-      <a-text value="+ Notitie" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-
-    <a-plane id="notesClose"
-             position="0.8 0.4 0.01"
-             width="0.2" height="0.2"
-             color="red"
-             class="clickable">
-      <a-text value="X" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-
-    <!-- Notes keyboard -->
-    <a-entity id="notesKeyboard" position="0 -0.6 0.02"></a-entity>
-  </a-plane>
-
-  <!-- Settings App -->
-  <a-plane id="settingsApp" visible="false"
-           position="0 1.5 -3"
-           width="1.8" height="1.2"
-           color="#222">
-
-    <a-text value="Instellingen" position="-0.7 0.45 0.01"></a-text>
-
-    <a-text value="Cursor grootte:" position="-0.7 0.2 0.01"></a-text>
-    <a-plane id="cursorSmall" width="0.4" height="0.2" color="#555" position="-0.3 0.05 0.01" class="clickable">
-      <a-text value="Klein" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-    <a-plane id="cursorLarge" width="0.4" height="0.2" color="#555" position="0.3 0.05 0.01" class="clickable">
-      <a-text value="Groot" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-
-    <a-text value="Gaze tijd:" position="-0.7 -0.15 0.01"></a-text>
-    <a-plane id="gazeFast" width="0.4" height="0.2" color="#555" position="-0.3 -0.3 0.01" class="clickable">
-      <a-text value="Snel" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-    <a-plane id="gazeSlow" width="0.4" height="0.2" color="#555" position="0.3 -0.3 0.01" class="clickable">
-      <a-text value="Langzaam" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-
-    <a-plane id="settingsClose" width="0.2" height="0.2" color="red" position="0.75 0.45 0.01" class="clickable">
-      <a-text value="X" align="center" position="0 0 0.01"></a-text>
-    </a-plane>
-  </a-plane>
-
-  <a-sky color="#111"></a-sky>
+  <a-sky id="sky" color="#05060a"></a-sky>
+  <a-plane color="#20252b" width="40" height="40" rotation="-90 0 0"></a-plane>
 </a-scene>
 
-<script src="script.js"></script>
 </body>
 </html>
