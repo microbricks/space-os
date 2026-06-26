@@ -66,7 +66,7 @@ cameraBtn.addEventListener("click", async () => {
     bgVideo.style.display = "none";
 
     const scene = document.querySelector("a-scene");
-    scene.renderer.setClearColor(0x000010, 1);
+    scene.renderer.setClearColor(0x1a1f2b, 1);
     document.querySelector("#sky").setAttribute("visible", "true");
 
     arActive = false;
