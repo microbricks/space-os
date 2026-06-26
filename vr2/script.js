@@ -22,7 +22,7 @@ function showPanel(name) {
 }
 
 // ===============================
-// TILE CLICKS (APPS)
+// TILE CLICKS
 // ===============================
 const tileBrowser = document.querySelector("#tile-browser");
 const tileNotes = document.querySelector("#tile-notes");
@@ -201,8 +201,9 @@ function locomotionLoop() {
 locomotionLoop();
 
 // ===============================
-// GAZE CLICK (1 seconde kijken = click)
+// GAZE TIMER CIRKEL + GAZE CLICK
 // ===============================
+const gazeCircle = document.querySelector("#gazeCircle");
 let gazeTarget = null;
 let gazeStart = 0;
 const gazeDelay = 1000; // 1 seconde
@@ -232,23 +233,36 @@ function gazeLoop() {
     clickableEls.forEach(el => {
       el.setAttribute("color", el.id === "tile-ar" ? "#264b7b" : "#303545");
     });
-
     targetEl.setAttribute("color", "#4a8cff");
 
     if (gazeTarget !== targetEl) {
       gazeTarget = targetEl;
       gazeStart = performance.now();
-    } else {
-      if (performance.now() - gazeStart > gazeDelay) {
-        targetEl.emit("click");
-        gazeStart = performance.now() + 999999;
-      }
+      gazeCircle.style.display = "block";
     }
+
+    const progress = (performance.now() - gazeStart) / gazeDelay;
+    const angle = Math.min(progress * 360, 360);
+
+    gazeCircle.style.background = `
+      conic-gradient(
+        rgba(74,140,255,1) ${angle}deg,
+        rgba(255,255,255,0) ${angle}deg
+      )
+    `;
+
+    if (progress >= 1) {
+      targetEl.emit("click");
+      gazeStart = performance.now() + 999999;
+      gazeCircle.style.display = "none";
+    }
+
   } else {
     clickableEls.forEach(el => {
       el.setAttribute("color", el.id === "tile-ar" ? "#264b7b" : "#303545");
     });
     gazeTarget = null;
+    gazeCircle.style.display = "none";
   }
 
   requestAnimationFrame(gazeLoop);
