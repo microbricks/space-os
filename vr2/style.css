@@ -1,0 +1,21 @@
+#gazeCircle {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.3);
+  box-sizing: border-box;
+  z-index: 19;
+  pointer-events: none;
+  transform: rotate(-90deg);
+  display: none;
+  background: conic-gradient(
+    rgba(74,140,255,1) 0deg,
+    rgba(74,140,255,1) 0deg,
+    rgba(255,255,255,0) 0deg
+  );
+}
