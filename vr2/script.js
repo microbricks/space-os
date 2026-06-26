@@ -199,3 +199,59 @@ function locomotionLoop() {
 }
 
 locomotionLoop();
+
+// ===============================
+// GAZE CLICK (1 seconde kijken = click)
+// ===============================
+let gazeTarget = null;
+let gazeStart = 0;
+const gazeDelay = 1000; // 1 seconde
+
+function gazeLoop() {
+  const cameraEl = document.querySelector("[camera]");
+  if (!cameraEl) {
+    requestAnimationFrame(gazeLoop);
+    return;
+  }
+
+  const camera = cameraEl.object3D;
+  const raycaster = new THREE.Raycaster();
+  const dir = new THREE.Vector3(0, 0, -1);
+  camera.getWorldDirection(dir);
+  raycaster.set(camera.position, dir);
+
+  const clickableEls = Array.from(document.querySelectorAll(".clickable"));
+  const clickableObjs = clickableEls.map(el => el.object3D);
+
+  const hits = raycaster.intersectObjects(clickableObjs, true);
+
+  if (hits.length > 0) {
+    const hitObj = hits[0].object;
+    let targetEl = hitObj.el;
+
+    clickableEls.forEach(el => {
+      el.setAttribute("color", el.id === "tile-ar" ? "#264b7b" : "#303545");
+    });
+
+    targetEl.setAttribute("color", "#4a8cff");
+
+    if (gazeTarget !== targetEl) {
+      gazeTarget = targetEl;
+      gazeStart = performance.now();
+    } else {
+      if (performance.now() - gazeStart > gazeDelay) {
+        targetEl.emit("click");
+        gazeStart = performance.now() + 999999;
+      }
+    }
+  } else {
+    clickableEls.forEach(el => {
+      el.setAttribute("color", el.id === "tile-ar" ? "#264b7b" : "#303545");
+    });
+    gazeTarget = null;
+  }
+
+  requestAnimationFrame(gazeLoop);
+}
+
+gazeLoop();
