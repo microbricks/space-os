@@ -2,14 +2,15 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>SpaceOS VR (full rebuild)</title>
+  <title>SpaceOS VR (full)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="script.js" defer></script>
+  <script src="spaceos.js" defer></script>
 
   <style>
     body { margin:0; overflow:hidden; }
+
     #bgVideo {
       position: fixed;
       top: 0; left: 0;
@@ -19,6 +20,7 @@
       z-index: -2;
       display: none;
     }
+
     #centerDot {
       position: fixed;
       top: 50%;
@@ -32,6 +34,7 @@
       opacity: 0.8;
       z-index: 20;
     }
+
     #gazeCircle {
       position: fixed;
       top: 50%;
@@ -175,6 +178,12 @@
             position="0 2 -2.9"
             text="value: Instellingen: Joy-Con, keyboard, AR status; align: center; color: #FFFFFF; width: 4;"
             visible="false"></a-entity>
+
+  <!-- JOY-CON POINTER RAY -->
+  <a-entity id="joyconRay"
+            line="start: 0 0 0; end: 0 0 -3; color: #4a8cff"
+            visible="false">
+  </a-entity>
 
 </a-scene>
 
